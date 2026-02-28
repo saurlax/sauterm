@@ -1,5 +1,6 @@
 <template>
   <UApp>
+    <Xterm />
     <UButton>Click me</UButton>
   </UApp>
 </template>
