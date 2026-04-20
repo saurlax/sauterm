@@ -1,7 +1,7 @@
-import type { TabsProps } from "@nuxt/ui";
+import type { NavigationMenuItem } from "@nuxt/ui";
 import { Process as ProcessClient } from "~/utils/process";
 
-type TabItems = NonNullable<TabsProps["items"]>;
+type TabItems = NavigationMenuItem[];
 type ProcessOptions = ConstructorParameters<typeof ProcessClient>[0];
 
 export default function useTabs() {
@@ -12,9 +12,10 @@ export default function useTabs() {
   );
 
   const tabItems = computed<TabItems>(() =>
-    tabs.value.map(({ id, title }) => ({
+    tabs.value.map(({ id, title, to }) => ({
       label: title,
       value: id,
+      to,
     })),
   );
 
@@ -51,8 +52,18 @@ export default function useTabs() {
     return tab;
   }
 
+  function openOrFocusPageTab(to: string, title: string) {
+    const existing = tabs.value.find((item) => item.type === "page" && item.to === to);
+    if (existing) {
+      activeTab.value = existing.id;
+      return existing;
+    }
+
+    return openPageTab(to, title);
+  }
+
   function openSettingsTab() {
-    return openPageTab("/settings", "Settings");
+    return openOrFocusPageTab("/settings", "Settings");
   }
 
   async function closeTab(termId: string | undefined = activeTab.value) {
@@ -84,6 +95,7 @@ export default function useTabs() {
     activeTab,
     openTab,
     openPageTab,
+    openOrFocusPageTab,
     openSettingsTab,
     closeTab,
   };

@@ -1,6 +1,11 @@
 <script setup lang="ts">
 import { WTerm } from "@wterm/dom";
 
+definePageMeta({
+  key: (route) => route.fullPath,
+  keepalive: true,
+});
+
 const route = useRoute();
 const tabs = useState<Tab[]>("tabs", () => []);
 const terminalRef = useTemplateRef<HTMLElement>("terminal");
@@ -18,9 +23,8 @@ const process = computed(() => {
   }
 
   return (
-    tabs.value.find(
-      (tab) => tab.type === "terminal" && tab.id === termId.value,
-    )?.process ?? null
+    tabs.value.find((tab) => tab.type === "terminal" && tab.id === termId.value)
+      ?.process ?? null
   );
 });
 
@@ -83,8 +87,16 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="h-full w-full">
-    <div v-if="process" ref="terminal" class="h-full w-full" />
-    <UEmpty v-else title="No terminal found." variant="naked" />
-  </div>
+  <div ref="terminal" />
 </template>
+
+<style>
+@import "@wterm/dom/css";
+
+.wterm {
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: 0;
+}
+</style>

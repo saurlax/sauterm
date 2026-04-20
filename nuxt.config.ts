@@ -3,7 +3,6 @@ export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
   devtools: { enabled: true },
   modules: ["@nuxt/ui"],
-  css: ["@wterm/dom/css"],
   ssr: false,
   // https://github.com/nuxt/ui/issues/6118
   hooks: {

@@ -1,15 +1,37 @@
 <script setup lang="ts">
 const route = useRoute();
 const router = useRouter();
-const { tabItems, tabs, activeTab, openTab } = useTabs();
+const { tabItems, tabs, activeTab, openTab, openSettingsTab, closeTab } =
+  useTabs();
+
+const navigationItems = computed(() => [
+  [
+    ...tabItems.value,
+    {
+      icon: "i-lucide-plus",
+      value: "__add",
+      onSelect: (event: Event) => {
+        event.preventDefault();
+        void onAddTab();
+      },
+    },
+  ],
+  [
+    {
+      icon: "i-lucide-settings",
+      value: "__settings",
+      onSelect: (event: Event) => {
+        event.preventDefault();
+        onOpenSettings();
+      },
+    },
+  ],
+]);
 
 watch(
   () => route.fullPath,
   (fullPath) => {
-    const tab = tabs.value.find((item) => item.to === fullPath);
-    if (tab && activeTab.value !== tab.id) {
-      activeTab.value = tab.id;
-    }
+    activeTab.value = tabs.value.find((item) => item.to === fullPath)?.id;
   },
   { immediate: true },
 );
@@ -34,26 +56,47 @@ watch(
 async function onAddTab() {
   await openTab({ command: "cmd.exe", title: "cmd" });
 }
+
+function onOpenSettings() {
+  const tab = openSettingsTab();
+  void router.push(tab.to);
+}
+
+async function onCloseTab(tabId: string | undefined) {
+  if (!tabId) {
+    return;
+  }
+  await closeTab(tabId);
+}
+
+function isClosable(value: string | undefined) {
+  if (!value) {
+    return false;
+  }
+  return tabs.value.some((tab) => tab.id === value);
+}
 </script>
 
 <template>
   <div class="flex h-screen flex-col overflow-hidden">
-    <div class="flex items-center gap-2 border-b border-default px-3 py-2">
-      <UTabs
-        v-model="activeTab"
-        :items="tabItems"
-        variant="link"
-        :content="false"
-        class="min-w-0 flex-1"
-      />
-      <UButton
-        icon="i-lucide-plus"
-        color="neutral"
-        variant="ghost"
-        aria-label="New tab"
-        @click="onAddTab"
-      />
-    </div>
+    <UNavigationMenu
+      v-model="activeTab"
+      :items="navigationItems"
+      highlight
+      variant="link"
+    >
+      <template #item-trailing="{ item }">
+        <UButton
+          v-if="isClosable(item.value)"
+          icon="i-lucide-x"
+          color="neutral"
+          variant="ghost"
+          size="xs"
+          aria-label="Close tab"
+          @click.stop="onCloseTab(item.value)"
+        />
+      </template>
+    </UNavigationMenu>
     <div class="min-h-0 flex-1">
       <slot />
     </div>
