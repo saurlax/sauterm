@@ -63,9 +63,8 @@ pub fn open_term(
     let mut cmd = if let Some(command) = command {
         CommandBuilder::new(command)
     } else if cfg!(target_os = "windows") {
-        let mut default = CommandBuilder::new("powershell.exe");
-        default.arg("-NoLogo");
-        default
+        let shell = std::env::var("COMSPEC").unwrap_or_else(|_| "cmd.exe".to_string());
+        CommandBuilder::new(shell)
     } else {
         CommandBuilder::new(std::env::var("SHELL").unwrap_or_else(|_| "/bin/bash".to_string()))
     };

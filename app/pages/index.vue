@@ -13,7 +13,7 @@ async function onOpenShell() {
 </script>
 
 <template>
-  <Xterm v-if="activeTerm" :term="activeTerm" />
+  <Terminal v-if="activeTerm" :term="activeTerm" />
   <UEmpty v-else title="Select a terminal to get started." variant="naked">
     <template #actions>
       <UButton :loading="opening" @click="onOpenShell">Shell</UButton>
