@@ -33,6 +33,10 @@ The frontend renders terminal UI with `@wterm/dom`, while process control and PT
 2. Keep Vue components focused on one responsibility.
 3. Prefer explicit cleanup for listeners/subscriptions in lifecycle hooks.
 4. Minimize reactive state and watchers to what is strictly needed.
+5. Nuxt auto-imports types in this codebase where available; do not add manual type imports from `~/utils` or `~/types` when a shared or auto-imported type can be referenced directly.
+6. Shared tab/process shapes should live in `app/types/*.d.ts` as global ambient types instead of imported type aliases.
+7. Prefer Nuxt UI components and `ui` props over hand-written Tailwind utilities, especially in layout files like `app/layouts/default.vue`; keep raw utility classes to the minimum needed for sizing or overflow.
+8. Use Nuxt routing for page-like tabs. If a tab is a page, navigate directly to its route. If a tab is terminal-backed, route it to `app/pages/terminal.vue` and pass the terminal id through the query string.
 
 ## Tauri Integration Conventions
 

@@ -1,17 +1,17 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 
-type TermDataEvent = {
+type ProcessDataEvent = {
   termId: string;
   data: string;
 };
 
-type TermExitEvent = {
+type ProcessExitEvent = {
   termId: string;
   code: number | null;
 };
 
-export type TermOptions = {
+export type ProcessOptions = {
   command?: string;
   args?: string[];
   termId?: string;
@@ -20,7 +20,7 @@ export type TermOptions = {
 type DataHandler = (data: string) => void;
 type ExitHandler = (code: number | null) => void;
 
-export class Term {
+export class Process {
   readonly termId: string;
   readonly command?: string;
   readonly args?: string[];
@@ -30,7 +30,7 @@ export class Term {
   private exitHandlers = new Set<ExitHandler>();
   private opened = false;
 
-  constructor(options: TermOptions = {}) {
+  constructor(options: ProcessOptions = {}) {
     this.termId = options.termId ?? crypto.randomUUID();
     this.command = options.command;
     this.args = options.args;
@@ -41,7 +41,7 @@ export class Term {
       return;
     }
 
-    this.unlistenData = await listen<TermDataEvent>("term://data", (event) => {
+    this.unlistenData = await listen<ProcessDataEvent>("term://data", (event) => {
       if (event.payload.termId !== this.termId) {
         return;
       }
@@ -50,7 +50,7 @@ export class Term {
       }
     });
 
-    this.unlistenExit = await listen<TermExitEvent>("term://exit", (event) => {
+    this.unlistenExit = await listen<ProcessExitEvent>("term://exit", (event) => {
       if (event.payload.termId !== this.termId) {
         return;
       }

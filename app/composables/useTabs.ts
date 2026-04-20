@@ -1,38 +1,58 @@
 import type { TabsProps } from "@nuxt/ui";
-import { Term, type TermOptions } from "~/utils/term";
+import { Process as ProcessClient } from "~/utils/process";
 
 type TabItems = NonNullable<TabsProps["items"]>;
-type TermMap = Record<string, Term>;
+type ProcessOptions = ConstructorParameters<typeof ProcessClient>[0];
 
 export default function useTabs() {
-  const tabs = useState<TabItems>("tabs", () => []);
+  const tabs = useState<Tab[]>("tabs", () => []);
   const activeTab = useState<string | undefined>(
-    "active-term-tab",
+    "active-process-tab",
     () => undefined,
   );
-  const terms = useState<TermMap>("term-map", () => ({}));
 
-  const activeTerm = computed<Term | null>(() => {
-    const termId = activeTab.value;
-    if (!termId) {
-      return null;
-    }
-    return terms.value[termId] ?? null;
-  });
+  const tabItems = computed<TabItems>(() =>
+    tabs.value.map(({ id, title }) => ({
+      label: title,
+      value: id,
+    })),
+  );
 
-  async function openTab(options: TermOptions = {}) {
-    const term = new Term(options);
-    await term.open();
-
-    tabs.value.push({
-      label: `Shell ${tabs.value.length + 1}`,
-      icon: "i-lucide-terminal",
-      value: term.termId,
+  async function openTab(options: ProcessOptions & { title?: string } = {}) {
+    const process = new ProcessClient({
+      command: options.command ?? "cmd.exe",
+      args: options.args,
     });
+    await process.open();
 
-    terms.value[term.termId] = term;
-    activeTab.value = term.termId;
-    return term;
+    const tab: TerminalTab = {
+      id: process.termId,
+      title: options.title ?? "cmd",
+      type: "terminal",
+      to: `/terminal?termId=${process.termId}`,
+      process,
+    };
+
+    tabs.value.push(tab);
+    activeTab.value = process.termId;
+    return process;
+  }
+
+  function openPageTab(to: string, title: string) {
+    const tab: Tab = {
+      id: crypto.randomUUID(),
+      title,
+      type: "page",
+      to,
+    };
+
+    tabs.value.push(tab);
+    activeTab.value = tab.id;
+    return tab;
+  }
+
+  function openSettingsTab() {
+    return openPageTab("/settings", "Settings");
   }
 
   async function closeTab(termId: string | undefined = activeTab.value) {
@@ -40,15 +60,12 @@ export default function useTabs() {
       return;
     }
 
-    const term = terms.value[termId];
-    if (term) {
-      await term.close();
-      delete terms.value[termId];
+    const tab = tabs.value.find((item) => item.id === termId);
+    if (tab?.type === "terminal" && tab.process) {
+      await tab.process.close();
     }
 
-    const index = tabs.value.findIndex(
-      (item) => (item as { value?: string }).value === termId,
-    );
+    const index = tabs.value.findIndex((item) => item.id === termId);
     if (index === -1) {
       return;
     }
@@ -57,9 +74,17 @@ export default function useTabs() {
 
     if (activeTab.value === termId) {
       const next = tabs.value[index] ?? tabs.value[index - 1];
-      activeTab.value = (next as { value?: string } | undefined)?.value;
+      activeTab.value = next?.id;
     }
   }
 
-  return { tabs, activeTab, activeTerm, openTab, closeTab };
+  return {
+    tabs,
+    tabItems,
+    activeTab,
+    openTab,
+    openPageTab,
+    openSettingsTab,
+    closeTab,
+  };
 }

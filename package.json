@@ -3,6 +3,7 @@
   "type": "module",
   "private": true,
   "scripts": {
+    "tauri:dev": "tauri dev",
     "dev": "nuxt dev",
     "build": "nuxt generate",
     "postinstall": "nuxt prepare",
